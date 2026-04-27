@@ -14,7 +14,6 @@ public class Move : MonoBehaviour
 
     [Header("Jump")]
     [SerializeField] private float jump_Power;
-    [SerializeField] private float jump_MinMultiplier = 0.4f;
     [SerializeField] private LayerMask ground_Layer;
     [SerializeField] private float ray_Distance = 0.15f;
 
@@ -55,7 +54,7 @@ public class Move : MonoBehaviour
         is_Grounded = Is_Grounded();
 
         animator.SetFloat("Horizontal", Mathf.Abs(horizontal_Move));
-        animator.SetFloat("Vertical", rb2D.linearVelocity.y);  // negativa = cayendo
+        animator.SetFloat("Vertical", rb2D.linearVelocity.y);  
         animator.SetBool("isFloor", is_Grounded);
 
         // para el coyote time
@@ -71,22 +70,17 @@ public class Move : MonoBehaviour
 
         // salto 
 
-        if (Input.GetButtonDown("Jump") && coyote_Counter > 0f)
+        if (Input.GetButtonDown("Jump") && Is_Grounded())
         {
-            is_Jumping = true;
-            coyote_Counter = 0f;
-            rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, 0f);
-            rb2D.AddForce(Vector2.up * jump_Power, ForceMode2D.Impulse);
+            rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, jump_Power);
             animator.SetTrigger("Jumpp");
+
         }
 
-        if (Input.GetButtonUp("Jump") && is_Jumping && rb2D.linearVelocity.y > 0f)
+        if (Input.GetButtonUp("Jump") && rb2D.linearVelocity.y > 0f)
         {
-            rb2D.linearVelocity = new Vector2(
-                rb2D.linearVelocity.x,
-                rb2D.linearVelocity.y * jump_MinMultiplier
-            );
-            animator.SetTrigger("Jumpp");
+            rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, rb2D.linearVelocity.y * 0.5f);
+
         }
 
 
