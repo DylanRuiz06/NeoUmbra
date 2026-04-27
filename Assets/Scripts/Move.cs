@@ -20,6 +20,8 @@ public class Move : MonoBehaviour
     [Header("Coyote Time")]
     [SerializeField] private float coyote_Time = 0.15f;
 
+    private Coroutine activeAbilityCoroutine;
+
     private float coyote_Counter = 0f;
     private bool is_Grounded = false;
     private bool is_Jumping = false;
@@ -36,6 +38,10 @@ public class Move : MonoBehaviour
     private bool can_Dash = true;
     private bool can_Move = true;
 
+    [Header("Habilidades Temporales")]
+    private int jumpsLeft;
+    private int maxJumps = 1; // 1 = Normal, 2 = Salto Doble
+
 
     private void Start()
     {
@@ -43,6 +49,9 @@ public class Move : MonoBehaviour
         boxCollider = GetComponent<BoxCollider2D>();
         animator = GetComponent<Animator>();
         ini_Gravity = rb2D.gravityScale;
+        maxJumps = 1;
+        jumpsLeft = 1;
+
 
     }
 
@@ -70,11 +79,29 @@ public class Move : MonoBehaviour
 
         // salto 
 
-        if (Input.GetButtonDown("Jump") && Is_Grounded())
+        if (is_Grounded && rb2D.linearVelocity.y <= 0.1f)
         {
-            rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, jump_Power);
-            animator.SetTrigger("Jumpp");
+            jumpsLeft = maxJumps;
+        }
 
+        if (Input.GetButtonDown("Jump"))
+        {
+            // Saltamos si: estamos en el suelo, o estamos en Coyote Time, o tenemos saltos dobles extra
+            if (is_Grounded || coyote_Counter > 0f || jumpsLeft > 0)
+            {
+                // Si saltamos usando Coyote Time pero no estábamos en el suelo, 
+                // gastamos un salto para que no sea infinito
+                if (!is_Grounded && coyote_Counter > 0f && maxJumps == 1)
+                {
+                    jumpsLeft = 0;
+                }
+
+                rb2D.linearVelocity = new Vector2(rb2D.linearVelocity.x, jump_Power);
+                animator.SetTrigger("Jumpp");
+
+                jumpsLeft--;
+                coyote_Counter = 0f; // Gastamos el coyote time al saltar
+            }
         }
 
         if (Input.GetButtonUp("Jump") && rb2D.linearVelocity.y > 0f)
@@ -83,7 +110,6 @@ public class Move : MonoBehaviour
 
         }
 
-
         // dash 
         if (Input.GetKeyDown(KeyCode.LeftShift) && can_Dash)
         {
@@ -91,6 +117,27 @@ public class Move : MonoBehaviour
         }
 
     }
+    public void EnableDoubleJump(float duration)
+    {
+        if (activeAbilityCoroutine != null) StopCoroutine(activeAbilityCoroutine);
+        activeAbilityCoroutine = StartCoroutine(DoubleJumpRoutine(duration));
+        jumpsLeft = 2;
+    }
+
+    private IEnumerator DoubleJumpRoutine(float duration)
+    {
+        maxJumps = 2;
+
+        yield return new WaitForSeconds(duration);
+
+        maxJumps = 1;
+        // Si el jugador estaba en el aire, evitamos que se quede sin saltos de golpe
+        if (jumpsLeft > 1) jumpsLeft = 1;
+
+        Debug.Log("Salto Doble Expirado");
+    }
+
+
 
     private void FixedUpdate()
     {
