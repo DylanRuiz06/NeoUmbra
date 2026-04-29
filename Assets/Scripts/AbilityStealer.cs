@@ -3,9 +3,15 @@ using UnityEngine;
 public class AbilityStealer : MonoBehaviour
 {
     private float range = 2.89f; 
+    private Animator animator;
 
     public LayerMask enemyLayer;
     private float offsetY = 1.8f;
+
+    void Start()
+    {
+        animator = GetComponent<Animator>();
+    }
 
     void Update()
     {
@@ -19,6 +25,8 @@ public class AbilityStealer : MonoBehaviour
         {
             // La lógica ahora usa el nuevo 'range' corto
             RaycastHit2D hit = Physics2D.Raycast(rayOrigin, direction, range, enemyLayer);
+            animator.SetTrigger("Atac");
+
 
             if (hit.collider != null)
             {
