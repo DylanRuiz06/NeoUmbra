@@ -26,7 +26,7 @@ public class AbilityStealer : MonoBehaviour
         // Visualización constante para que veas qué tan corto es el rayo ahora
         Debug.DrawRay(rayOrigin, direction * range, Color.green);
 
-        if (Input.GetKeyDown(KeyCode.E))
+        if (Input.GetKeyDown(KeyCode.J))
         {
             // La lógica ahora usa el nuevo 'range' corto
             RaycastHit2D hit = Physics2D.Raycast(rayOrigin, direction, range, enemyLayer);
