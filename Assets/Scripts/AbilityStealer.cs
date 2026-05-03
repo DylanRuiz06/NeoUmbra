@@ -2,11 +2,16 @@ using UnityEngine;
 
 public class AbilityStealer : MonoBehaviour
 {
-    private float range = 2.89f; 
+    [Header("Rango")]
+    [SerializeField] private float range = 2.89f;
+
     private Animator animator;
 
+
     public LayerMask enemyLayer;
-    private float offsetY = 1.8f;
+    [Header("Altura")]
+    [SerializeField] private float offsetY = 1.8f;
+
 
     void Start()
     {
