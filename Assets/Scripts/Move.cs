@@ -24,7 +24,7 @@ public class Move : MonoBehaviour
 
     private float coyote_Counter = 0f;
     private bool is_Grounded = false;
-    private bool look_Right = true;
+    public bool look_Right = true;
     private Vector3 speed = Vector3.zero;
 
     [UnitHeaderInspectable("Animation")]
@@ -42,6 +42,22 @@ public class Move : MonoBehaviour
     private int jumpsLeft;
     private int maxJumps = 1;
 
+    [Header("Habilidad de Eco Robada")]
+    private bool tieneOndaEco = false;
+    private bool ondaEnEjecucion = false;
+
+    [Header("Configuración Física de la Onda")]
+    public float ecoRadioMaximo = 8f;
+    public float ecoVelocidadExpansion = 10f;
+    public LayerMask capaBloquesDestructibles; // Capa de los bloques que vas a romper
+
+    [Header("Visuales de la Onda")]
+    // Arrastra aquí el Particle System del eco (puede ser hijo del jugador)
+    public ParticleSystem particulasOndaJugador;
+
+    [SerializeField] private float duracionPoder = 7f;
+    private float tiempoRestantePoder = 0f;
+
     private void Start()
     {
         rb2D = GetComponent<Rigidbody2D>();
@@ -57,6 +73,7 @@ public class Move : MonoBehaviour
     private void Update()
     {
         horizontal_Move = Input.GetAxisRaw("Horizontal") * move_Speed * 1000;
+        //Debug.Log($"Input:{Input.GetAxisRaw("Horizontal")} hMove:{horizontal_Move}");
         is_Grounded = Is_Grounded();
 
         animator.SetFloat("Horizontal", Mathf.Abs(horizontal_Move));
@@ -107,11 +124,97 @@ public class Move : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.LeftShift) && can_Dash)
         {
             StartCoroutine(Dash());
+
+        }
+
+        if (tieneOndaEco)
+        {
+            tiempoRestantePoder -= Time.deltaTime;
+
+            // Si el tiempo llega a cero, el poder se apaga
+            if (tiempoRestantePoder <= 0)
+            {
+                PerderOndaEco();
+            }
+        }
+
+        // Si el jugador tiene la habilidad, presiona K y no hay otra onda ejecutándose
+        if (tieneOndaEco && Input.GetKeyDown(KeyCode.K) && !ondaEnEjecucion)
+        {
+            StartCoroutine(EjecutarOndaEcoJugador());
+        }
+
+        if (tieneOndaEco && Input.GetKeyDown(KeyCode.K) && !ondaEnEjecucion)
+        {
+            StartCoroutine(EjecutarOndaEcoJugador());
+        }
+
+    }
+
+    public void HabilitarOndaEco()
+    {
+        tieneOndaEco = true;
+        tiempoRestantePoder = duracionPoder;
+    }
+
+    private void PerderOndaEco()
+    {
+        tieneOndaEco = false;
+        Debug.Log("¡Se terminó el tiempo! Habilidad de eco perdida.");
+
+        // Opcional: Aquí puedes apagar algún efecto visual que indique 
+        // que el jugador ya no brilla o ya no tiene el poder.
+    }
+
+    private IEnumerator EjecutarOndaEcoJugador()
+    {
+        ondaEnEjecucion = true;
+        float radioActual = 0f;
+        Debug.Log("Ejecutando onda de eco del jugador.");
+
+        // Activamos los visuales (las partículas)
+        if (particulasOndaJugador != null)
+        {
+            particulasOndaJugador.Stop();
+            particulasOndaJugador.Play();
+        }
+
+        // Bucle de expansión de la física
+        while (radioActual < ecoRadioMaximo)
+        {
+            radioActual += ecoVelocidadExpansion * Time.deltaTime;
+
+            // Buscamos si hay bloques destructibles dentro del radio actual en 360 grados
+            Collider2D[] bloquesDetectados = Physics2D.OverlapCircleAll(transform.position, radioActual, capaBloquesDestructibles);
+
+            foreach (Collider2D colision in bloquesDetectados)
+            {
+                BloqueDestructible bloque = colision.GetComponent<BloqueDestructible>();
+                if (bloque != null)
+                {
+                    bloque.Romper();
+                }
+            }
+
+            yield return null; // Espera al siguiente frame
+        }
+
+        ondaEnEjecucion = false;
+    }
+
+    // Para poder ver el radio de tu propia onda en el editor al seleccionar al jugador
+    private void OnDrawGizmosSelected()
+    {
+        if (tieneOndaEco)
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(transform.position, ecoRadioMaximo);
         }
     }
 
     private void FixedUpdate()
     {
+
         if (can_Move && !isDashing)
         {
             Movement(horizontal_Move * Time.fixedDeltaTime);
@@ -129,12 +232,13 @@ public class Move : MonoBehaviour
         rb2D.gravityScale = 0;
         rb2D.linearVelocity = new Vector2(dash_Speed * direction, 0);
 
-        animator.SetTrigger("Dash");
 
         yield return new WaitForSeconds(time_Dash);
 
         rb2D.linearVelocity = Vector2.zero;
         rb2D.gravityScale = ini_Gravity;
+
+        speed = Vector3.zero;
 
         isDashing = false;
         can_Move = true;
@@ -158,7 +262,7 @@ public class Move : MonoBehaviour
 
         if (jumpsLeft > 1) jumpsLeft = 1;
 
-        Debug.Log("Salto Doble Expirado");
+        activeAbilityCoroutine = null;
     }
 
     private bool Is_Grounded()
@@ -177,7 +281,10 @@ public class Move : MonoBehaviour
     private void Movement(float move)
     {
         Vector3 target_Speed = new Vector2(move, rb2D.linearVelocity.y);
+        //Debug.Log($"Antes:{rb2D.linearVelocity.x} Target:{target_Speed.x}");
         rb2D.linearVelocity = Vector3.SmoothDamp(rb2D.linearVelocity, target_Speed, ref speed, smoth_Move);
+        //Debug.Log($"Despues:{rb2D.linearVelocity.x}");
+
 
         if (move > 0 && !look_Right)
             Turn();
@@ -189,7 +296,7 @@ public class Move : MonoBehaviour
     {
         look_Right = !look_Right;
         Vector3 escala = transform.localScale;
-        escala.x *= -1;
+        escala.x = look_Right ? Mathf.Abs(escala.x) : -Mathf.Abs(escala.x);
         transform.localScale = escala;
     }
 
