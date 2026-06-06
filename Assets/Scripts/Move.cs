@@ -46,13 +46,13 @@ public class Move : MonoBehaviour
     private bool tieneOndaEco = false;
     private bool ondaEnEjecucion = false;
 
-    [Header("Configuración Física de la Onda")]
+    [Header("Configuraciï¿½n Fï¿½sica de la Onda")]
     public float ecoRadioMaximo = 8f;
     public float ecoVelocidadExpansion = 10f;
     public LayerMask capaBloquesDestructibles; // Capa de los bloques que vas a romper
 
     [Header("Visuales de la Onda")]
-    // Arrastra aquí el Particle System del eco (puede ser hijo del jugador)
+    // Arrastra aquï¿½ el Particle System del eco (puede ser hijo del jugador)
     public ParticleSystem particulasOndaJugador;
 
     [SerializeField] private float duracionPoder = 7f;
@@ -62,6 +62,9 @@ public class Move : MonoBehaviour
     [SerializeField] private float playerOffsetY = 1.2f;
 
     private OndaEcoConCobertura enemigoRobadoReferencia;
+    [Header("Cambio de DimensiÃ³n")]
+    [SerializeField] private KeyCode dimensionShiftKey = KeyCode.K;
+    private bool canDimensionShift = false;
 
     private void Start()
     {
@@ -143,7 +146,7 @@ public class Move : MonoBehaviour
             }
         }
 
-        // Si el jugador tiene la habilidad, presiona K y no hay otra onda ejecutándose
+        // Si el jugador tiene la habilidad, presiona K y no hay otra onda ejecutï¿½ndose
         if (tieneOndaEco && Input.GetKeyDown(KeyCode.K) && !ondaEnEjecucion)
         {
             StartCoroutine(EjecutarOndaEcoJugador());
@@ -161,13 +164,13 @@ public class Move : MonoBehaviour
         tieneOndaEco = true;
         tiempoRestantePoder = duracionPoder;
         enemigoRobadoReferencia = enemigo; // Guardamos al enemigo en la memoria
-        Debug.Log("¡Habilidad de onda obtenida! Enemigo guardado en referencia.");
+        Debug.Log("ï¿½Habilidad de onda obtenida! Enemigo guardado en referencia.");
     }
 
     private void PerderOndaEco()
     {
         tieneOndaEco = false;
-        Debug.Log("¡Se terminó el tiempo! Habilidad de eco perdida.");
+        Debug.Log("ï¿½Se terminï¿½ el tiempo! Habilidad de eco perdida.");
 
         // NUEVO: Si tenemos un enemigo guardado en la memoria, lo despertamos
         if (enemigoRobadoReferencia != null)
@@ -185,14 +188,14 @@ public class Move : MonoBehaviour
         // CALCULAMOS EL CENTRO REAL (Pecho del jugador) sumando el offset en Y
         Vector3 centroOndaPlayer = transform.position + new Vector3(0, playerOffsetY, 0);
 
-        // Activamos los visuales (las partículas)
+        // Activamos los visuales (las partï¿½culas)
         if (particulasOndaJugador != null)
         {
             particulasOndaJugador.Stop();
             particulasOndaJugador.Play();
         }
 
-        // Bucle de expansión de la física
+        // Bucle de expansiï¿½n de la fï¿½sica
         while (radioActual < ecoRadioMaximo)
         {
             radioActual += ecoVelocidadExpansion * Time.deltaTime;
@@ -222,10 +225,18 @@ public class Move : MonoBehaviour
         if (tieneOndaEco)
         {
             Gizmos.color = Color.yellow;
-            // Sumamos el offset aquí para que el círculo suba en el Inspector
+            // Sumamos el offset aquï¿½ para que el cï¿½rculo suba en el Inspector
             Vector3 centroOndaPlayer = transform.position + new Vector3(0, playerOffsetY, 0);
             Gizmos.DrawWireSphere(centroOndaPlayer, ecoRadioMaximo);
         }
+        
+        if (canDimensionShift && Input.GetKeyDown(dimensionShiftKey))
+        {
+            int current = DimensionManager.Instance.CurrentDimension;
+            int next = (current + 1) % 2;
+            DimensionManager.Instance.ShiftDimension(next);
+        }
+
     }
 
     private void FixedUpdate()
@@ -235,6 +246,12 @@ public class Move : MonoBehaviour
         {
             Movement(horizontal_Move * Time.fixedDeltaTime);
         }
+    }
+    
+    public void EnableDimensionShift(float duration)
+    {
+        if (activeAbilityCoroutine != null) StopCoroutine(activeAbilityCoroutine);
+        activeAbilityCoroutine = StartCoroutine(DimensionShiftRoutine(duration));
     }
 
     private IEnumerator Dash()
@@ -266,6 +283,16 @@ public class Move : MonoBehaviour
         if (activeAbilityCoroutine != null) StopCoroutine(activeAbilityCoroutine);
         activeAbilityCoroutine = StartCoroutine(DoubleJumpRoutine(duration));
         jumpsLeft = 2;
+    }
+
+    private IEnumerator DimensionShiftRoutine(float duration)
+    {
+        canDimensionShift = true;
+
+        yield return new WaitForSeconds(duration);
+
+        canDimensionShift = false;
+        Debug.Log("Cambio de DimensiÃ³n Expirado");
     }
 
     private IEnumerator DoubleJumpRoutine(float duration)
