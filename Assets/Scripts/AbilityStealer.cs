@@ -6,6 +6,8 @@ public class AbilityStealer : MonoBehaviour
     [SerializeField] private float range = 2.89f;
 
     private Animator animator;
+    private Move move;
+
 
 
     public LayerMask enemyLayer;
@@ -16,12 +18,13 @@ public class AbilityStealer : MonoBehaviour
     void Start()
     {
         animator = GetComponent<Animator>();
+        move = GetComponent<Move>();
     }
 
     void Update()
     {
         Vector3 rayOrigin = transform.position + new Vector3(0, offsetY, 0);
-        Vector2 direction = transform.localScale.x > 0 ? Vector2.right : Vector2.left;
+        Vector2 direction = move.look_Right ? Vector2.right : Vector2.left; 
 
         // Visualización constante para que veas qué tan corto es el rayo ahora
         Debug.DrawRay(rayOrigin, direction * range, Color.green);

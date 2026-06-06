@@ -1774,6 +1774,7 @@ MonoBehaviour:
     m_Bits: 64
   ray_Distance: 0.15
   coyote_Time: 0.15
+  look_Right: 1
   dash_Speed: 40
   time_Dash: 1
 --- !u!114 &737820194
@@ -1817,6 +1818,18 @@ MonoBehaviour:
   maxHealth: 5
   currentHealth: 0
   healthBar: {fileID: 2018240887}
+--- !u!114 &737820197
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 737820185}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fcaf9878484cf1c49a0841082887a74c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &750175780
 GameObject:
   m_ObjectHideFlags: 0
@@ -4324,6 +4337,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 250518055795991705, guid: ae0b8d29e04b5aa4782cd827db1dbd64, type: 3}
       insertIndex: -1
       addedObject: {fileID: 737820196}
+    - targetCorrespondingSourceObject: {fileID: 250518055795991705, guid: ae0b8d29e04b5aa4782cd827db1dbd64, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 737820197}
   m_SourcePrefab: {fileID: 100100000, guid: ae0b8d29e04b5aa4782cd827db1dbd64, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
