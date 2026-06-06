@@ -8,6 +8,12 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
+  - enabled: 1
+    path: Assets/Scenes/Prueba enemigo ecp.unity
+    guid: c7352a13839a65f4381b29c8122d33d5
+  - enabled: 1
+    path: Assets/Scenes/Levelevel.unity
+    guid: 38aff4f0e10e707dc917cc69b0a273b3
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0
