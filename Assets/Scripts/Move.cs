@@ -58,6 +58,11 @@ public class Move : MonoBehaviour
     [SerializeField] private float duracionPoder = 7f;
     private float tiempoRestantePoder = 0f;
 
+    [Header("Ajuste de Altura PSB Player")]
+    [SerializeField] private float playerOffsetY = 1.2f;
+
+    private OndaEcoConCobertura enemigoRobadoReferencia;
+
     private void Start()
     {
         rb2D = GetComponent<Rigidbody2D>();
@@ -151,10 +156,12 @@ public class Move : MonoBehaviour
 
     }
 
-    public void HabilitarOndaEco()
+    public void HabilitarOndaEco(OndaEcoConCobertura enemigo)
     {
         tieneOndaEco = true;
         tiempoRestantePoder = duracionPoder;
+        enemigoRobadoReferencia = enemigo; // Guardamos al enemigo en la memoria
+        Debug.Log("¡Habilidad de onda obtenida! Enemigo guardado en referencia.");
     }
 
     private void PerderOndaEco()
@@ -162,15 +169,21 @@ public class Move : MonoBehaviour
         tieneOndaEco = false;
         Debug.Log("¡Se terminó el tiempo! Habilidad de eco perdida.");
 
-        // Opcional: Aquí puedes apagar algún efecto visual que indique 
-        // que el jugador ya no brilla o ya no tiene el poder.
+        // NUEVO: Si tenemos un enemigo guardado en la memoria, lo despertamos
+        if (enemigoRobadoReferencia != null)
+        {
+            enemigoRobadoReferencia.ReactivarEnemigo();
+            enemigoRobadoReferencia = null; // Limpiamos la memoria para el siguiente robo
+        }
     }
-
     private IEnumerator EjecutarOndaEcoJugador()
     {
         ondaEnEjecucion = true;
         float radioActual = 0f;
         Debug.Log("Ejecutando onda de eco del jugador.");
+
+        // CALCULAMOS EL CENTRO REAL (Pecho del jugador) sumando el offset en Y
+        Vector3 centroOndaPlayer = transform.position + new Vector3(0, playerOffsetY, 0);
 
         // Activamos los visuales (las partículas)
         if (particulasOndaJugador != null)
@@ -184,12 +197,13 @@ public class Move : MonoBehaviour
         {
             radioActual += ecoVelocidadExpansion * Time.deltaTime;
 
-            // Buscamos si hay bloques destructibles dentro del radio actual en 360 grados
-            Collider2D[] bloquesDetectados = Physics2D.OverlapCircleAll(transform.position, radioActual, capaBloquesDestructibles);
+            // CAMBIAMOS 'transform.position' POR 'centroOndaPlayer'
+            Collider2D[] bloquesDetectados = Physics2D.OverlapCircleAll(centroOndaPlayer, radioActual, capaBloquesDestructibles);
 
             foreach (Collider2D colision in bloquesDetectados)
             {
-                BloqueDestructible bloque = colision.GetComponent<BloqueDestructible>();
+                // Buscamos el componente en el bloque (o en sus padres por si acaso)
+                BloqueDestructible bloque = colision.GetComponentInParent<BloqueDestructible>();
                 if (bloque != null)
                 {
                     bloque.Romper();
@@ -208,7 +222,9 @@ public class Move : MonoBehaviour
         if (tieneOndaEco)
         {
             Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(transform.position, ecoRadioMaximo);
+            // Sumamos el offset aquí para que el círculo suba en el Inspector
+            Vector3 centroOndaPlayer = transform.position + new Vector3(0, playerOffsetY, 0);
+            Gizmos.DrawWireSphere(centroOndaPlayer, ecoRadioMaximo);
         }
     }
 
